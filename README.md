@@ -1,10 +1,18 @@
 # Lab M4.07 - Terraform AWS Networking Deep Dive
 
-**Repository:** [https://github.com/cloud-engineering-bootcamp/ce-lab-terraform-networking](https://github.com/cloud-engineering-bootcamp/ce-lab-terraform-networking)
+**Repository:** https://github.com/MaryaAhmadi/ce-lab-terraform-networking.git
 
 **Activity Type:** Individual  
 **Estimated Time:** 60-90 minutes  
 **Submission:** GitHub Repository
+
+
+📌 Overview
+
+This lab demonstrates how to provision a production-style AWS network using Terraform.
+The architecture spans three Availability Zones (AZs) and follows a three-tier design (public, private, database).
+
+
 
 ## Learning Objectives
 
@@ -54,6 +62,22 @@ Build production-grade network infrastructure:
 **Time limit:** 60-90 minutes
 
 ---
+
+
+Infrastructure Created
+
+Component	           Details
+----------             ------------
+VPC	                   10.0.0.0/16
+Availability Zones	      3
+Public Subnets	          3 (for web/load balancer tier)
+Private Subnets	          3 (for application tier)
+Database Subnets	          3 (isolated database tier)
+Internet Gateway	1
+NAT Gateways	              1 (configurable to 3)
+Route Tables	              Public, Private, Database
+
+
 
 ## Step-by-Step Instructions
 
@@ -444,79 +468,80 @@ Create `cost-comparison.md`:
 
 ---
 
-## Documentation & Submission
-
-### Create README.md
-
-```markdown
-# Lab M4.07 - Terraform AWS Networking
-
-## Infrastructure Created
-- **VPC:** 10.0.0.0/16 across 3 AZs
-- **Public Subnets:** 3 (for load balancers)
-- **Private Subnets:** 3 (for app servers)
-- **Database Subnets:** 3 (for databases)
-- **Internet Gateway:** 1
-- **NAT Gateway:** 1 (configurable to 3)
-
-## Architecture
-
-\`\`\`
+Architecture
 AZ-A          AZ-B          AZ-C
 ├─ Public     ├─ Public     ├─ Public
 ├─ Private    ├─ Private    ├─ Private
 └─ Database   └─ Database   └─ Database
-\`\`\`
 
-## Deployment
+Traffic Flow
 
-\`\`\`bash
-# Single NAT (dev)
-terraform apply -var="single_nat_gateway=true"
+Public subnets → Internet Gateway
 
-# Multi-AZ NAT (prod)
-terraform apply -var="single_nat_gateway=false"
-\`\`\`
+Private subnets → NAT Gateway
 
-## Outputs
-- VPC ID
-- Subnet IDs (public, private, database)
-- NAT Gateway public IPs
+Database subnets → Isolated (no internet access)
 
-## Comparison: Manual vs Terraform
-- **Manual (Week 3):** 45 minutes
-- **Terraform:** 5 minutes
-```
-
-### Create Repository
-
-```bash
-git init
-git add .
-git commit -m "Lab M4.07: AWS Networking with Terraform
-
-- Created multi-AZ VPC with 9 subnets
-- Configured Internet and NAT Gateways
-- Set up public, private, and database subnets
-- Implemented cost optimization options
-- Tested network connectivity"
-
-gh repo create ce-lab-terraform-networking --public
-git push -u origin main
-```
 
 ---
 
-## Grading Rubric (100 points)
+Deployment
 
-| Criteria | Points |
-|----------|--------|
-| VPC and subnets created | 25 |
-| Internet Gateway configured | 15 |
-| NAT Gateway(s) working | 20 |
-| Route tables correct | 20 |
-| Network tested | 10 |
-| Documentation | 10 |
+Initialize Terraform:
+terraform init
+terraform fmt
+
+
+terraform validate:
+
+Apply (Development — Single NAT Gateway)
+terraform apply -var="single_nat_gateway=true"
+Apply (Production — Multi-AZ NAT Gateways)
+terraform apply -var="single_nat_gateway=false"
+
+
+🔍 Verification
+
+Run connectivity tests to verify resources:
+
+chmod +x test-connectivity.sh
+./test-connectivity.sh
+
+---
+
+output:
+
+✅ VPC is available
+
+✅ 9 subnets are created
+
+✅ NAT Gateway is available
+
+✅ Route tables are correctly configured
+
+💰 Cost Comparison
+Mode	Monthly Cost	Notes
+Single NAT	~$36.90	Lower cost, single point of failure
+Multi-AZ NAT	~$102.70	High availability, no cross-AZ charges
+
+
+
+--- 
+Screenshots
+
+all screenshots inside the screenshots/ folder.
+
+
+VPC overview in AWS Console
+
+All subnets (public, private, database)
+
+NAT Gateway details
+
+Route tables overview
+
+Terraform Apply output
+
 
 ---
 
@@ -529,5 +554,15 @@ git push -u origin main
 ✅ **Infrastructure as Code** is faster and more reliable
 
 ---
+
+
+
+Cleanup
+
+To avoid ongoing AWS charges:
+
+terraform destroy -auto-approve
+
+
 
 **Next Lab:** M4.08 - Terraform AWS Compute (EC2 & Security Groups)
